@@ -1,29 +1,31 @@
 myhosts:
   hosts:  
     host1:
-      ansible_user:  
+      ansible_user: # пользователь от имени которого ansible сможет настроить хост должен иметь sudo nopasswd права)
       ansible_ssh_pass: 
-      ansible_host: 
+      ansible_host: # ip на котором будет расположен бот и БД (совпадает с RM_HOST и DB_HOST)
 
     host2:
-      ansible_host: 
-      ansible_user: 
+      ansible_host: # ip на котором будет расположена реплика БД (совпадает с DB_REPL_HOST)
+      ansible_user: # пользователь от имени которого ansible сможет настроить хост должен иметь sudo nopasswd права)
       ansible_ssh_pass: 
   vars:
+    DB_REPL_HOST: # адрес реплики бд (совпадает с host2:ansible_host)
     DB_REPL_USER: replicator
     DB_REPL_PASSWORD: Qq123456
     DB_REPL_PORT: 5432
     POSTGRES_VERSION: 14
-    DB_HOST: 
-    DB_PORT: 
+    DB_HOST: # ip на котором будет расположена БД (то же самое, что RM_HOST и host1:ansible_host)
+    DB_PORT: 5432
+    DB_USER: postgresql
+    DB_PASSWORD: Qq12345
+    DB_DATABASE: # название БД
     GIT: https://github.com/ra4ok999/D3EJYvZmY4kgXom.git
     WORKDIR: /root/ansible  
-    TOKEN: 
-    RM_HOST: 
+    TOKEN: # токен можно найти в notion/письме
+    RM_HOST: # хост где стоит бот и БД (по сути то же самое что и DB_HOST и host1:ansible_host)
     RM_PORT: 22 
-    RM_USER: 
-    RM_PASSWORD: 
-    DB_USER: 
-    DB_PASSWORD: 
-    DB_DATABASE: 
-    DB_REPL_HOST: 
+    RM_USER: # пользователь хоста для SSH
+    RM_PASSWORD: # пароль пользователя для SSH
+ 
+     
