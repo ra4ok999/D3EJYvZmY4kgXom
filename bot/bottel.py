@@ -311,7 +311,7 @@ def replLogs(update: Update, context): #Логи репликации с master
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=host, username=username, password=password, port=port)
-    stdin, stdout, stderr = client.exec_command('docker logs db 2>&1 | grep "replica" | tail -n20')
+    stdin, stdout, stderr = client.exec_command(f'echo {password} | sudo -S docker logs db 2>&1 | grep "replica" | tail -n20')
     data = stdout.read() + stderr.read()
     client.close()
     data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
