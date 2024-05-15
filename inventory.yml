@@ -1,0 +1,29 @@
+myhosts:
+  hosts:  
+    host1:
+      ansible_user:  
+      ansible_ssh_pass: 
+      ansible_host: 
+
+    host2:
+      ansible_host: 
+      ansible_user: 
+      ansible_ssh_pass: 
+  vars:
+    DB_REPL_USER: replicator
+    DB_REPL_PASSWORD: Qq123456
+    DB_REPL_PORT: 5432
+    POSTGRES_VERSION: 14
+    DB_HOST: 
+    DB_PORT: 
+    GIT: https://github.com/ra4ok999/D3EJYvZmY4kgXom.git
+    WORKDIR: /root/ansible  
+    TOKEN: 7070337006:AAFdZ3mobyrvE2oLGEF3V4I0z2_n8LFDy1E
+    RM_HOST: 
+    RM_PORT: 22 
+    RM_USER: 
+    RM_PASSWORD: 
+    DB_USER: 
+    DB_PASSWORD: 
+    DB_DATABASE: 
+    DB_REPL_HOST: 

@@ -1,0 +1,146 @@
+- name: hosts install
+  hosts: myhosts
+  become: true
+  tasks:
+    - name: postgresql instalation
+      package:
+        name: postgresql
+        state: present
+    - name: psycopg instalation
+      package:
+        name: postgresql-contrib
+        state: present
+    - name: libpq-dev instalation
+      package:
+        name: libpq-dev
+        state: present
+
+- name: install host1
+  hosts: host1
+  become: true
+  tasks:
+    - name: install pkgs 
+      apt:
+        pkg:
+        - git
+        - python3-pip
+    - name: get a git repository
+      git:
+        repo: "{{ hostvars[inventory_hostname]['GIT'] }}"
+        dest: "{{ hostvars[inventory_hostname]['WORKDIR'] }}"
+        version: main
+    - name: installing pip packages
+      pip:
+        requirements: "{{ hostvars[inventory_hostname]['WORKDIR'] }}/requirements.txt"
+    - name: make logs dir
+      command: mkdir -p "{{ hostvars[inventory_hostname]['WORKDIR'] }}/../bot"
+    - name: postgresql.conf master configuration
+      blockinfile:
+        path: "/etc/postgresql/{{ hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/main/postgresql.conf"
+        block: |
+          listen_addresses = '*'
+          port = {{ hostvars[inventory_hostname]['DB_PORT'] }}
+          max_wal_senders=10
+          wal_level=replica
+          wal_log_hints = on
+          hot_standby=on
+          max_replication_slots=10
+          hot_standby_feedback=on
+          log_replication_commands=on
+    - name: pg_hba master configuration
+      blockinfile:
+        path: "/etc/postgresql/{{ hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/main/pg_hba.conf"
+        block: |
+          local all postgres peer
+          host replication all {{ hostvars[inventory_hostname]['ansible_host'] }}/24 scram-sha-256
+          host all all {{ hostvars[inventory_hostname]['ansible_host'] }}/32 trust
+    - name: apply changes
+      service:
+        name: postgresql
+        state: restarted
+      become: true
+    - name: copying init.sql
+      copy:
+        src: init.sql
+        dest: /tmp/init.sql
+    - name: change rights
+      file:
+        path: /tmp/init.sql
+        owner: postgres
+        group: postgres
+        mode: '0644'
+    - name: db init
+      replace:
+        path: /tmp/init.sql
+        regexp: "DB_DATABASE"
+        replace: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+    - name: user init
+      replace:
+        path: /tmp/init.sql
+        regexp: "DB_USER"
+        replace: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
+    - name: repl user init
+      replace:
+        path: /tmp/init.sql
+        regexp: "DB_REPL_USER"
+        replace: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
+    - name: repl pass init
+      replace:
+        path: /tmp/init.sql
+        regexp: "DB_REPL_PASSWORD"
+        replace: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+    - name: run init.sql
+      command: /usr/bin/psql -a -f /tmp/init.sql
+      become: true
+      become_user: postgres
+
+- name: install host2
+  hosts: host2
+  become: true
+  tasks:
+    - name: postgresql.conf replica conf
+      blockinfile:
+        path: "/etc/postgresql/{{ hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/main/postgresql.conf"
+        block: |
+          listen_addresses = '*'
+          port = {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }}
+      become: true
+      become_user: postgres
+    - name: apply replica changes
+      service:
+        name: postgresql
+        state: restarted
+    - name: delete dbs 
+      command: rm -rf /var/lib/postgresql/{{ hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/
+      become: true
+      become_user: postgres
+    - name: performing replication
+      command: pg_basebackup -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -D /var/lib/postgresql/{{hostvars[inventory_hostname]['POSTGRES_VERSION'] }}/main/ -p {{ hostvars[inventory_hostname]['DB_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }}
+      environment:
+        PGUSER: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
+        PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+      become: true
+      become_user: postgres
+    - name: rights
+      command: chown -R postgres:postgres /var/lib/postgresql/
+      become: true
+      become_user: postgres
+
+- name: startBot
+  hosts: host1
+  become: true
+  tasks:        
+    - name: start bot
+      command: python3 "{{ hostvars[inventory_hostname]['WORKDIR'] }}/bottel.py"
+      environment:
+        TOKEN: "{{ hostvars[inventory_hostname]['TOKEN'] }}"
+        RM_HOST: "{{ hostvars[inventory_hostname]['RM_HOST'] }}"
+        RM_PORT: "{{ hostvars[inventory_hostname]['RM_PORT'] }}"
+        RM_USER: "{{ hostvars[inventory_hostname]['RM_USER'] }}"
+        RM_PASSW: "{{ hostvars[inventory_hostname]['RM_PASSWORD'] }}"
+        DB_HOST: "{{ hostvars[inventory_hostname]['DB_HOST'] }}"
+        DB_PORT: "{{ hostvars[inventory_hostname]['DB_PORT'] }}"
+        DB_USER: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
+        DB_PASSWORD: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
+        DB_DATABASE: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+   
