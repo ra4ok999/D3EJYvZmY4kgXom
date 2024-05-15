@@ -16,7 +16,7 @@ TOKEN = os.getenv('TOKEN')
 host = os.getenv('RM_HOST')
 port = os.getenv('RM_PORT')
 username = os.getenv('RM_USER')
-password = os.getenv('RM_PASSW')
+password = os.getenv('RM_PASSWORD')
 
 DB_username=os.getenv('DB_USER')
 DB_password=os.getenv('DB_PASSWORD')
