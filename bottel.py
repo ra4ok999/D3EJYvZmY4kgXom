@@ -311,7 +311,7 @@ def replLogs(update: Update, context): #Логи репликации с master
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=host, username=username, password=password, port=port)
-    stdin, stdout, stderr = client.exec_command('tac /var/log/postgresql/postgresql-15-main.log | head -n 10')
+    stdin, stdout, stderr = client.exec_command('cat /var/log/postgresql/postgresql-14-main.log | grep replica | head -n 20')
     data = stdout.read() + stderr.read()
     client.close()
     data = str(data).replace('\\n', '\n').replace('\\t', '\t')[2:-1]
