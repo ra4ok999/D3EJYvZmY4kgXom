@@ -150,7 +150,7 @@ def aptListCommand(update: Update, context):
 def aptList(update: Update, context):
     user_input = update.message.text
     if user_input == 'all':
-        packet='apt list'
+        packet='apt list --installed'
     else:
         packet='apt list ' + user_input
     client = paramiko.SSHClient()
